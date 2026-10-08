@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 
@@ -10,7 +10,7 @@ export function AuthPage() {
   const navigate = useNavigate()
   const login = useAuthStore(state => state.login)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)

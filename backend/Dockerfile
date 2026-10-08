@@ -14,10 +14,11 @@ RUN apt-get update && apt-get install -y \
     poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
+# Single source of truth requirements.txt from repository root
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY backend/ .
 
 EXPOSE 8000
 

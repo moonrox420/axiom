@@ -44,6 +44,10 @@ for ($k = 0; $k -lt $headers.Count; $k++) {
     $fileContent = [string]::Join("`n", $fileLines)
     
     # Handle files
+    if ($cur.FileName -eq "backend/requirements.txt") {
+        continue
+    }
+
     $targetRelPaths = @()
     if ($k -eq 6 -and $cur.FileName -eq "README.md") {
         # MVP README

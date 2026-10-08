@@ -29,8 +29,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
       DATABASE_URL: postgresql+psycopg://axiom:axiom@postgres:5432/axiom_db
       REDIS_URL: redis://redis:6379/0
@@ -51,8 +51,8 @@ services:
 
   celery_worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     command: celery -A app.workers.celery_app worker --loglevel=info
     environment:
       DATABASE_URL: postgresql+psycopg://axiom:axiom@postgres:5432/axiom_db

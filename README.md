@@ -50,13 +50,12 @@ API Docs: http://localhost:8000/docs
 
 **Backend:**
 ```bash
-cd backend
-# Create and activate Python 3.12 environment
+# From repository root:
 python -m venv .venv
 # Windows PowerShell: .venv\Scripts\Activate.ps1
 # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn backend.app.main:app --reload --port 8000
 ```
 
 **Frontend:**

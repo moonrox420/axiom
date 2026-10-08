@@ -4,7 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class InvoiceLineItemCreate(BaseModel):
@@ -13,7 +13,7 @@ class InvoiceLineItemCreate(BaseModel):
     unit_cost: Decimal
     tax_rate: Decimal
     category: str = "service"
-    freight: Decimal = Decimal("0")
+    freight: Decimal = Decimal(0)
     notes: str | None = None
 
 

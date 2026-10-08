@@ -3,10 +3,9 @@
 import logging
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-
 from app.core.database import SessionLocal
 from app.services.document_service import DocumentService
+
 from .celery_app import celery_app
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ service = AxiomService(settings=AxiomSettings())
 class IngestDocumentRequest(BaseModel):
     source_type: str = Field(..., description="One of: receipt, email, timesheet, pdf, voice, csv")
     raw_text: str = Field(..., min_length=1)
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class GenerateInvoiceRequest(BaseModel):

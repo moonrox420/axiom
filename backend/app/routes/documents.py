@@ -34,7 +34,7 @@ async def upload_document(
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Upload failed: {str(exc)}",
+            detail=f"Upload failed: {exc!s}",
         )
 
 
@@ -53,5 +53,5 @@ def process_document(
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Processing failed: {str(exc)}",
+            detail=f"Processing failed: {exc!s}",
         )

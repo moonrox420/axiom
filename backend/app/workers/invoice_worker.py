@@ -1,16 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import datetime, timezone
 from uuid import UUID
-
-from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
 from app.models.document import Document
-from app.models.invoice import Invoice
 from app.schemas.invoice import InvoiceCreate, InvoiceLineItemCreate
 from app.services.invoice_service import InvoiceService
+
 from .celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -51,8 +49,8 @@ def generate_invoice_from_document_task(
 
         invoice_create = InvoiceCreate(
             client_id=UUID(client_id),
-            issue_date=date.today(),
-            due_date=date.today(),
+            issue_date=datetime.now(timezone.utc).date(),
+            due_date=datetime.now(timezone.utc).date(),
             line_items=line_items,
         )
 

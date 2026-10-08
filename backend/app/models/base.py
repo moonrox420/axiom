@@ -1,10 +1,9 @@
 ﻿from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import Column, DateTime, String
+from sqlalchemy import Column, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase
 

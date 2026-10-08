@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.asset import Asset
 from app.services.asset_service import AssetService
 
 router = APIRouter()

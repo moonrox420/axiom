@@ -1,7 +1,6 @@
 ﻿from __future__ import annotations
 
 import logging
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -57,7 +56,7 @@ class AssetService:
         source: str,
         confidence: float = 0.8,
         evidence: str = "",
-    ) -> Optional[Asset]:
+    ) -> Asset | None:
         asset = db.query(Asset).filter(
             Asset.id == asset_id,
             Asset.team_id == team_id,
@@ -84,7 +83,7 @@ class AssetService:
         return asset
 
     @staticmethod
-    def get_asset(db: Session, team_id: UUID, asset_id: UUID) -> Optional[Asset]:
+    def get_asset(db: Session, team_id: UUID, asset_id: UUID) -> Asset | None:
         return db.query(Asset).filter(
             Asset.id == asset_id,
             Asset.team_id == team_id,
@@ -94,7 +93,7 @@ class AssetService:
     def list_assets(
         db: Session,
         team_id: UUID,
-        status: Optional[str] = None,
+        status: str | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> list[Asset]:

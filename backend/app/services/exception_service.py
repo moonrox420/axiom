@@ -2,14 +2,13 @@
 
 import logging
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.models.asset import Asset
 from app.models.exception import Exception as ExceptionModel
 from app.models.invoice import Invoice
-from app.models.asset import Asset
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ class ExceptionService:
                 db.add(exc)
                 exceptions.append(exc)
 
-            if invoice.total <= Decimal("0"):
+            if invoice.total <= Decimal(0):
                 exc = ExceptionModel(
                     team_id=team_id,
                     entity_type="invoice",
@@ -83,7 +82,7 @@ class ExceptionService:
         db: Session,
         team_id: UUID,
         status: str = "open",
-        severity: Optional[str] = None,
+        severity: str | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> list[ExceptionModel]:
@@ -101,7 +100,7 @@ class ExceptionService:
         team_id: UUID,
         exception_id: UUID,
         resolution_notes: str = "",
-    ) -> Optional[ExceptionModel]:
+    ) -> ExceptionModel | None:
         exc = db.query(ExceptionModel).filter(
             ExceptionModel.id == exception_id,
             ExceptionModel.team_id == team_id,

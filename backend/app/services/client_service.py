@@ -2,7 +2,6 @@
 
 import logging
 import re
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -22,7 +21,7 @@ class ClientService:
         return cleaned.title()
 
     @staticmethod
-    def normalize_email(value: Optional[str]) -> Optional[str]:
+    def normalize_email(value: str | None) -> str | None:
         if not value:
             return None
         return value.strip().lower()
@@ -57,7 +56,7 @@ class ClientService:
         return ClientRead.from_orm(client)
 
     @staticmethod
-    def get_client(db: Session, team_id: UUID, client_id: UUID) -> Optional[ClientRead]:
+    def get_client(db: Session, team_id: UUID, client_id: UUID) -> ClientRead | None:
         client = db.query(Client).filter(
             Client.id == client_id,
             Client.team_id == team_id,
@@ -74,7 +73,7 @@ class ClientService:
     @staticmethod
     def update_client(
         db: Session, team_id: UUID, client_id: UUID, payload: ClientUpdate
-    ) -> Optional[ClientRead]:
+    ) -> ClientRead | None:
         client = db.query(Client).filter(
             Client.id == client_id,
             Client.team_id == team_id,

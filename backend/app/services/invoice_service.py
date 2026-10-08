@@ -1,9 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 class InvoiceService:
     @staticmethod
     def generate_invoice_number(db: Session, team_id: UUID) -> str:
-        today = date.today()
+        today = datetime.now(timezone.utc).date()
         count = db.query(Invoice).filter(
             Invoice.team_id == team_id,
             Invoice.issue_date >= date(today.year, today.month, 1),
@@ -67,7 +66,7 @@ class InvoiceService:
         return InvoiceRead.from_orm(invoice)
 
     @staticmethod
-    def get_invoice(db: Session, team_id: UUID, invoice_id: UUID) -> Optional[InvoiceRead]:
+    def get_invoice(db: Session, team_id: UUID, invoice_id: UUID) -> InvoiceRead | None:
         invoice = db.query(Invoice).filter(
             Invoice.id == invoice_id,
             Invoice.team_id == team_id,
@@ -76,7 +75,7 @@ class InvoiceService:
 
     @staticmethod
     def list_invoices(
-        db: Session, team_id: UUID, status: Optional[str] = None, skip: int = 0, limit: int = 100
+        db: Session, team_id: UUID, status: str | None = None, skip: int = 0, limit: int = 100
     ) -> list[InvoiceRead]:
         query = db.query(Invoice).filter(Invoice.team_id == team_id)
         if status:
@@ -87,7 +86,7 @@ class InvoiceService:
     @staticmethod
     def update_invoice(
         db: Session, team_id: UUID, invoice_id: UUID, payload: InvoiceUpdate
-    ) -> Optional[InvoiceRead]:
+    ) -> InvoiceRead | None:
         invoice = db.query(Invoice).filter(
             Invoice.id == invoice_id,
             Invoice.team_id == team_id,
@@ -136,11 +135,11 @@ class InvoiceService:
         tax = sum(
             (item.quantity * item.unit_cost * item.tax_rate) for item in line_items
         )
-        freight = sum((item.freight for item in line_items), Decimal("0"))
+        freight = sum((item.freight for item in line_items), Decimal(0))
         
         invoice.subtotal = subtotal
         invoice.tax_amount = tax
         invoice.freight = freight
-        invoice.total = subtotal + tax + freight - (invoice.discount or Decimal("0"))
+        invoice.total = subtotal + tax + freight - (invoice.discount or Decimal(0))
         
         db.commit()

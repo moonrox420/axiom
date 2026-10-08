@@ -1,7 +1,6 @@
 ﻿from __future__ import annotations
 
-from decimal import Decimal
-from sqlalchemy import Column, Date, DECIMAL, String, Text
+from sqlalchemy import DECIMAL, Column, Date, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 

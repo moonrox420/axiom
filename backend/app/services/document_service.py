@@ -2,14 +2,12 @@
 
 import logging
 import re
-from datetime import datetime
 from io import BytesIO
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 import boto3
 from PIL import Image
-from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -36,7 +34,7 @@ class DocumentService:
         filename: str,
         file_content: bytes,
         source_type: str,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> DocumentRead:
         try:
             s3_path = f"documents/{team_id}/{filename}"
@@ -83,7 +81,7 @@ class DocumentService:
         return cleaned
 
     @staticmethod
-    def extract_client_from_text(db: Session, team_id: UUID, raw_text: str) -> Optional[UUID]:
+    def extract_client_from_text(db: Session, team_id: UUID, raw_text: str) -> UUID | None:
         patterns = [
             r"(?i)(?:client|customer|bill to|billed to)[:\s]+([A-Za-z0-9 .&'-]+)",
             r"(?i)(?:from|from:)\s+([A-Za-z0-9 .&'-]+)",

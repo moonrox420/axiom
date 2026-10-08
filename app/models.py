@@ -2,21 +2,22 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Any, Dict, List, Literal, Optional, Union
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Any, Literal
+
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def to_decimal(value: Union[str, int, float, Decimal, None], places: int = 2) -> Decimal:
+def to_decimal(value: str | float | Decimal | None, places: int = 2) -> Decimal:
     if value is None:
-        return Decimal("0").quantize(Decimal("0.01"))
-    quant = Decimal("1").scaleb(-places)
+        return Decimal(0).quantize(Decimal("0.01"))
+    quant = Decimal(1).scaleb(-places)
     return Decimal(str(value)).quantize(quant, rounding=ROUND_HALF_UP)
 
 
-def format_money(value: Union[str, int, float, Decimal]) -> str:
+def format_money(value: str | float | Decimal) -> str:
     return f"${to_decimal(value):,.2f}"
 
 
@@ -24,20 +25,20 @@ def format_money(value: Union[str, int, float, Decimal]) -> str:
 class Client:
     id: str
     name: str
-    email: Optional[str] = None
-    address: Optional[str] = None
-    tax_id: Optional[str] = None
+    email: str | None = None
+    address: str | None = None
+    tax_id: str | None = None
     created_at: datetime = field(default_factory=utc_now)
 
 
 @dataclass
 class LineItem:
     description: str
-    quantity: Decimal = Decimal("1")
-    unit_cost: Decimal = Decimal("0")
-    tax_rate: Decimal = Decimal("0")
+    quantity: Decimal = Decimal(1)
+    unit_cost: Decimal = Decimal(0)
+    tax_rate: Decimal = Decimal(0)
     category: str = "service"
-    freight: Decimal = Decimal("0")
+    freight: Decimal = Decimal(0)
     notes: str = ""
 
     @property
@@ -56,19 +57,19 @@ class InvoiceDraft:
     due_date: datetime
     status: Literal["draft", "ready", "sent", "paid", "exception"] = "draft"
     currency: str = "USD"
-    subtotal: Decimal = Decimal("0")
-    tax: Decimal = Decimal("0")
-    freight: Decimal = Decimal("0")
-    total: Decimal = Decimal("0")
-    line_items: List[LineItem] = field(default_factory=list)
+    subtotal: Decimal = Decimal(0)
+    tax: Decimal = Decimal(0)
+    freight: Decimal = Decimal(0)
+    total: Decimal = Decimal(0)
+    line_items: list[LineItem] = field(default_factory=list)
     notes: str = ""
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=utc_now)
 
     def apply_totals(self) -> None:
         self.subtotal = sum((item.quantity * item.unit_cost) for item in self.line_items)
         self.tax = sum((item.quantity * item.unit_cost * item.tax_rate) for item in self.line_items)
-        self.freight = sum((item.freight for item in self.line_items), Decimal("0"))
+        self.freight = sum((item.freight for item in self.line_items), Decimal(0))
         self.total = self.subtotal + self.tax + self.freight
 
 
@@ -81,7 +82,7 @@ class Asset:
     last_seen_at: datetime
     status: Literal["in_service", "staged", "maintenance", "lost", "missing"] = "in_service"
     confidence: Decimal = Decimal("0.8")
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=utc_now)
 
 
@@ -101,7 +102,7 @@ class SourceDocument:
     source_type: str
     raw_text: str
     normalized_text: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=utc_now)
 
 
@@ -112,6 +113,6 @@ class ExceptionItem:
     entity_id: str
     reason: str
     severity: Literal["low", "medium", "high", "critical"] = "medium"
-    evidence: List[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=utc_now)
     resolved: bool = False

@@ -35,7 +35,7 @@ Production-ready stack for handling messy real-world inputs: invoicing, complian
 - Docker and Docker Compose (runs PostgreSQL 18 via `postgres:18-alpine`)
 - PostgreSQL 18 (installed locally on host PC or via Docker)
 - Node.js 18+ (if running frontend locally)
-- Python 3.14.7 (installed on system / virtualenv)
+- Python 3.12 (installed on system / virtualenv)
 
 ### Run with Docker Compose
 ```bash
@@ -51,7 +51,7 @@ API Docs: http://localhost:8000/docs
 **Backend:**
 ```bash
 cd backend
-# Create and activate Python 3.14.7 environment
+# Create and activate Python 3.12 environment
 python -m venv .venv
 # Windows PowerShell: .venv\Scripts\Activate.ps1
 # Linux/macOS: source .venv/bin/activate

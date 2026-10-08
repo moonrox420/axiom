@@ -1,9 +1,9 @@
 ﻿from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .config import AxiomSettings
 from .models import (
@@ -18,16 +18,17 @@ from .models import (
     utc_now,
 )
 
+
 class AxiomService:
-    def __init__(self, settings: Optional[AxiomSettings] = None) -> None:
+    def __init__(self, settings: AxiomSettings | None = None) -> None:
         self.settings = settings or AxiomSettings()
-        self.clients: Dict[str, Client] = {}
-        self.documents: Dict[str, SourceDocument] = {}
-        self.invoices: Dict[str, InvoiceDraft] = {}
-        self.assets: Dict[str, Asset] = {}
-        self.asset_history: Dict[str, List[AssetLocationEvent]] = {}
-        self.exceptions: Dict[str, ExceptionItem] = {}
-        self._client_name_index: Dict[str, str] = {}
+        self.clients: dict[str, Client] = {}
+        self.documents: dict[str, SourceDocument] = {}
+        self.invoices: dict[str, InvoiceDraft] = {}
+        self.assets: dict[str, Asset] = {}
+        self.asset_history: dict[str, list[AssetLocationEvent]] = {}
+        self.exceptions: dict[str, ExceptionItem] = {}
+        self._client_name_index: dict[str, str] = {}
 
     def normalize_name(self, value: str) -> str:
         if not value:
@@ -35,12 +36,18 @@ class AxiomService:
         cleaned = re.sub(r"\s+", " ", value.strip())
         return cleaned.title()
 
-    def normalize_email(self, value: Optional[str]) -> Optional[str]:
+    def normalize_email(self, value: str | None) -> str | None:
         if not value:
             return None
         return value.strip().lower()
 
-    def create_or_update_client(self, name: str, email: Optional[str] = None, address: Optional[str] = None, tax_id: Optional[str] = None) -> Client:
+    def create_or_update_client(
+        self,
+        name: str,
+        email: str | None = None,
+        address: str | None = None,
+        tax_id: str | None = None,
+    ) -> Client:
         safe_name = self.normalize_name(name)
         existing_id = self._client_name_index.get(safe_name)
         if existing_id:
@@ -65,7 +72,9 @@ class AxiomService:
         self._client_name_index[safe_name] = client_id
         return client
 
-    def ingest_document(self, source_type: str, raw_text: str, metadata: Optional[Dict[str, Any]] = None) -> SourceDocument:
+    def ingest_document(
+        self, source_type: str, raw_text: str, metadata: dict[str, Any] | None = None
+    ) -> SourceDocument:
         metadata = metadata or {}
         document = SourceDocument(
             id=f"doc_{len(self.documents) + 1:04d}",
@@ -78,21 +87,27 @@ class AxiomService:
         return document
 
     def _normalize_document_text(self, raw_text: str) -> str:
-        text = raw_text.replace("\\n", "\n").strip()
+        text = raw_text.replace(r"\n", "\n").strip()
         cleaned = re.sub(r"\s+", " ", text)
         return cleaned
 
-    def extract_client_from_text(self, raw_text: str) -> Optional[Client]:
-        matches = re.findall(r"(?i)(?:client|customer|bill to|billed to)[:\\s]+([A-Za-z0-9 .&'-]+)", raw_text)
+    def extract_client_from_text(self, raw_text: str) -> Client | None:
+        matches = re.findall(
+            r"(?i)(?:client|customer|bill to|billed to)[:\s]+([A-Za-z0-9 .&'-]+)",
+            raw_text,
+        )
         if matches:
             candidate = matches[0].strip()
             if candidate:
                 return self.create_or_update_client(candidate)
         return None
 
-    def parse_line_items_from_text(self, raw_text: str) -> List[LineItem]:
-        items: List[LineItem] = []
-        pattern = re.compile(r"(?P<desc>[A-Za-z0-9 /&.-]+?)\\s+(?P<qty>\\d+(?:\\.\\d+)?)\\s*[@xX]\\s*(?P<unit>\\d+(?:\\.\\d+)?)", re.IGNORECASE)
+    def parse_line_items_from_text(self, raw_text: str) -> list[LineItem]:
+        items: list[LineItem] = []
+        pattern = re.compile(
+            r"(?P<desc>[A-Za-z0-9 /&.-]+?)\s+(?P<qty>\d+(?:\.\d+)?)\s*[@xX]\s*(?P<unit>\d+(?:\.\d+)?)",
+            re.IGNORECASE,
+        )
         matches = pattern.findall(raw_text)
         for desc, qty, unit in matches:
             items.append(
@@ -102,31 +117,35 @@ class AxiomService:
                     unit_cost=to_decimal(unit),
                     tax_rate=Decimal(str(self.settings.tax_rate)),
                     category="service",
-                    freight=Decimal("0"),
+                    freight=Decimal(0),
                 )
             )
         if not items:
+            match = re.search(r"\$?(\d+(?:\.\d+)?)", raw_text)
+            unit_cost = to_decimal(match.group(1)) if match else Decimal(0)
             items.append(
                 LineItem(
                     description="General service",
-                    quantity=Decimal("1"),
-                    unit_cost=to_decimal(re.search(r\"\\$?(\\d+(?:\\.\\d+)?)\", raw_text).group(1) if re.search(r\"\\$?(\\d+(?:\\.\\d+)?)\", raw_text) else 0),
+                    quantity=Decimal(1),
+                    unit_cost=unit_cost,
                     tax_rate=Decimal(str(self.settings.tax_rate)),
                     category="service",
-                    freight=Decimal("0"),
+                    freight=Decimal(0),
                 )
             )
         return items
 
     def build_invoice_from_document(self, document_id: str) -> InvoiceDraft:
         document = self.documents[document_id]
-        client = self.extract_client_from_text(document.normalized_text) or self.create_or_update_client("Unassigned Client")
+        client = self.extract_client_from_text(
+            document.normalized_text
+        ) or self.create_or_update_client("Unassigned Client")
         items = self.parse_line_items_from_text(document.normalized_text)
 
         invoice = InvoiceDraft(
             id=f"inv_{len(self.invoices) + 1:04d}",
             client_id=client.id,
-            invoice_number=f"AX-{datetime.utcnow().strftime('%Y%m%d')}-{len(self.invoices) + 1:04d}",
+            invoice_number=f"AX-{utc_now().strftime('%Y%m%d')}-{len(self.invoices) + 1:04d}",
             issue_date=utc_now(),
             due_date=utc_now() + timedelta(days=14),
             status="draft",
@@ -139,7 +158,15 @@ class AxiomService:
         self.invoices[invoice.id] = invoice
         return invoice
 
-    def register_asset(self, name: str, category: str, location: str, source: str, confidence: Decimal = Decimal("0.8"), status: str = "in_service") -> Asset:
+    def register_asset(
+        self,
+        name: str,
+        category: str,
+        location: str,
+        source: str,
+        confidence: Decimal = Decimal("0.8"),
+        status: str = "in_service",
+    ) -> Asset:
         asset_id = f"asset_{len(self.assets) + 1:04d}"
         asset = Asset(
             id=asset_id,
@@ -164,7 +191,14 @@ class AxiomService:
         )
         return asset
 
-    def update_asset_location(self, asset_id: str, location: str, source: str, confidence: Decimal = Decimal("0.8"), evidence: str = "") -> Asset:
+    def update_asset_location(
+        self,
+        asset_id: str,
+        location: str,
+        source: str,
+        confidence: Decimal = Decimal("0.8"),
+        evidence: str = "",
+    ) -> Asset:
         asset = self.assets.get(asset_id)
         if not asset:
             raise KeyError(f"Asset {asset_id} not found")
@@ -185,8 +219,8 @@ class AxiomService:
         )
         return asset
 
-    def check_for_exceptions(self) -> List[ExceptionItem]:
-        exceptions: List[ExceptionItem] = []
+    def check_for_exceptions(self) -> list[ExceptionItem]:
+        exceptions: list[ExceptionItem] = []
         for invoice in self.invoices.values():
             if invoice.status == "exception":
                 continue
@@ -217,7 +251,7 @@ class AxiomService:
             self.exceptions[exc.id] = exc
         return exceptions
 
-    def get_exception_queue(self) -> List[Dict[str, Any]]:
+    def get_exception_queue(self) -> list[dict[str, Any]]:
         items = list(self.exceptions.values())
         return [
             {

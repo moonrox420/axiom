@@ -1,7 +1,7 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -27,7 +27,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(
-    user_id: str, email: str, expires_delta: Optional[timedelta] = None
+    user_id: str, email: str, expires_delta: timedelta | None = None
 ) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -59,6 +59,6 @@ def verify_token(token: str) -> TokenData:
         if user_id is None or email is None:
             raise JWTError("Invalid token")
         
-        return TokenData(user_id=user_id, email=email, exp=datetime.fromtimestamp(exp))
+        return TokenData(user_id=user_id, email=email, exp=datetime.fromtimestamp(exp, tz=timezone.utc))
     except JWTError as exc:
         raise JWTError("Could not validate credentials") from exc

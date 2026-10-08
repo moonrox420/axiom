@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { apiClient } from '../api/client'
 
 interface Invoice {
@@ -26,7 +26,7 @@ export function InvoicesPage() {
         params: { skip: 0, limit: 100 },
       })
       setInvoices(response.data)
-    } catch (err) {
+    } catch {
       setError('Failed to load invoices')
     } finally {
       setLoading(false)

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { apiClient } from '../api/client'
 
 interface Exception {
@@ -27,7 +27,7 @@ export function ExceptionsPage() {
         params: { status: 'open', skip: 0, limit: 100 },
       })
       setExceptions(response.data)
-    } catch (err) {
+    } catch {
       setError('Failed to load exceptions')
     } finally {
       setLoading(false)
@@ -40,7 +40,7 @@ export function ExceptionsPage() {
         resolution_notes: 'Resolved by user',
       })
       setExceptions(exceptions.filter(e => e.id !== exceptionId))
-    } catch (err) {
+    } catch {
       setError('Failed to resolve exception')
     }
   }

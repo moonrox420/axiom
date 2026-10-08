@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { apiClient } from '../api/client'
 
 interface Asset {
@@ -26,7 +26,7 @@ export function AssetsPage() {
         params: { skip: 0, limit: 100 },
       })
       setAssets(response.data)
-    } catch (err) {
+    } catch {
       setError('Failed to load assets')
     } finally {
       setLoading(false)

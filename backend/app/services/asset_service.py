@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 from uuid import UUID
@@ -57,11 +57,15 @@ class AssetService:
         confidence: float = 0.8,
         evidence: str = "",
     ) -> Asset | None:
-        asset = db.query(Asset).filter(
-            Asset.id == asset_id,
-            Asset.team_id == team_id,
-        ).first()
-        
+        asset = (
+            db.query(Asset)
+            .filter(
+                Asset.id == asset_id,
+                Asset.team_id == team_id,
+            )
+            .first()
+        )
+
         if not asset:
             return None
 
@@ -84,10 +88,14 @@ class AssetService:
 
     @staticmethod
     def get_asset(db: Session, team_id: UUID, asset_id: UUID) -> Asset | None:
-        return db.query(Asset).filter(
-            Asset.id == asset_id,
-            Asset.team_id == team_id,
-        ).first()
+        return (
+            db.query(Asset)
+            .filter(
+                Asset.id == asset_id,
+                Asset.team_id == team_id,
+            )
+            .first()
+        )
 
     @staticmethod
     def list_assets(
@@ -106,14 +114,22 @@ class AssetService:
     def get_asset_history(
         db: Session, team_id: UUID, asset_id: UUID, limit: int = 50
     ) -> list[AssetLocationEvent]:
-        asset = db.query(Asset).filter(
-            Asset.id == asset_id,
-            Asset.team_id == team_id,
-        ).first()
-        
+        asset = (
+            db.query(Asset)
+            .filter(
+                Asset.id == asset_id,
+                Asset.team_id == team_id,
+            )
+            .first()
+        )
+
         if not asset:
             return []
 
-        return db.query(AssetLocationEvent).filter(
-            AssetLocationEvent.asset_id == asset_id
-        ).order_by(AssetLocationEvent.created_at.desc()).limit(limit).all()
+        return (
+            db.query(AssetLocationEvent)
+            .filter(AssetLocationEvent.asset_id == asset_id)
+            .order_by(AssetLocationEvent.created_at.desc())
+            .limit(limit)
+            .all()
+        )

@@ -1,4 +1,4 @@
-﻿from .client import ClientCreate, ClientRead, ClientUpdate
+from .client import ClientCreate, ClientRead, ClientUpdate
 from .document import DocumentRead
 from .exception import ExceptionRead
 from .invoice import InvoiceCreate, InvoiceLineItemCreate, InvoiceRead, InvoiceUpdate

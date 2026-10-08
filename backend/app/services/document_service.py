@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 import re
@@ -68,6 +68,7 @@ class DocumentService:
         try:
             image = Image.open(BytesIO(image_bytes))
             import pytesseract
+
             text = pytesseract.image_to_string(image)
             return text.strip()
         except Exception as exc:
@@ -81,21 +82,27 @@ class DocumentService:
         return cleaned
 
     @staticmethod
-    def extract_client_from_text(db: Session, team_id: UUID, raw_text: str) -> UUID | None:
+    def extract_client_from_text(
+        db: Session, team_id: UUID, raw_text: str
+    ) -> UUID | None:
         patterns = [
             r"(?i)(?:client|customer|bill to|billed to)[:\s]+([A-Za-z0-9 .&'-]+)",
             r"(?i)(?:from|from:)\s+([A-Za-z0-9 .&'-]+)",
         ]
-        
+
         for pattern in patterns:
             matches = re.findall(pattern, raw_text)
             if matches:
                 candidate = matches[0].strip()
                 if len(candidate) > 2:
-                    client = db.query(Client).filter(
-                        Client.team_id == team_id,
-                        Client.name.ilike(f"%{candidate}%"),
-                    ).first()
+                    client = (
+                        db.query(Client)
+                        .filter(
+                            Client.team_id == team_id,
+                            Client.name.ilike(f"%{candidate}%"),
+                        )
+                        .first()
+                    )
                     if client:
                         return client.id
 
@@ -116,9 +123,7 @@ class DocumentService:
         return amounts
 
     @staticmethod
-    def process_document(
-        db: Session, document_id: UUID
-    ) -> DocumentRead:
+    def process_document(db: Session, document_id: UUID) -> DocumentRead:
         document = db.query(Document).filter(Document.id == document_id).first()
         if not document:
             raise ValueError(f"Document {document_id} not found")
@@ -127,7 +132,9 @@ class DocumentService:
             document.processing_status = "processing"
             db.commit()
 
-            s3_obj = s3_client.get_object(Bucket=settings.s3_bucket_name, Key=document.s3_path)
+            s3_obj = s3_client.get_object(
+                Bucket=settings.s3_bucket_name, Key=document.s3_path
+            )
             file_content = s3_obj["Body"].read()
 
             if document.source_type in ["receipt", "invoice", "photo"]:

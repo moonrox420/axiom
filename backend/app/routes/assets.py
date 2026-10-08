@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from uuid import UUID
 
@@ -38,7 +38,9 @@ def register_asset(
     status: str = "in_service",
     db: Session = Depends(get_db),
 ):
-    asset = AssetService.register_asset(db, team_id, name, category, location, source, confidence, status)
+    asset = AssetService.register_asset(
+        db, team_id, name, category, location, source, confidence, status
+    )
     return {
         "id": str(asset.id),
         "name": asset.name,

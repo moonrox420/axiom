@@ -111,11 +111,14 @@ from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Dict, List, Literal, Optional, Union
 
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def to_decimal(value: Union[str, int, float, Decimal, None], places: int = 2) -> Decimal:
+def to_decimal(
+    value: Union[str, int, float, Decimal, None], places: int = 2
+) -> Decimal:
     if value is None:
         return Decimal("0").quantize(Decimal("0.01"))
     quant = Decimal("1").scaleb(-places)
@@ -172,8 +175,12 @@ class InvoiceDraft:
     created_at: datetime = field(default_factory=utc_now)
 
     def apply_totals(self) -> None:
-        self.subtotal = sum((item.quantity * item.unit_cost) for item in self.line_items)
-        self.tax = sum((item.quantity * item.unit_cost * item.tax_rate) for item in self.line_items)
+        self.subtotal = sum(
+            (item.quantity * item.unit_cost) for item in self.line_items
+        )
+        self.tax = sum(
+            (item.quantity * item.unit_cost * item.tax_rate) for item in self.line_items
+        )
         self.freight = sum((item.freight for item in self.line_items), Decimal("0"))
         self.total = self.subtotal + self.tax + self.freight
 
@@ -185,7 +192,9 @@ class Asset:
     category: str
     current_location: str
     last_seen_at: datetime
-    status: Literal["in_service", "staged", "maintenance", "lost", "missing"] = "in_service"
+    status: Literal["in_service", "staged", "maintenance", "lost", "missing"] = (
+        "in_service"
+    )
     confidence: Decimal = Decimal("0.8")
     evidence: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=utc_now)
@@ -477,7 +486,9 @@ service = AxiomService(settings=AxiomSettings())
 
 
 class IngestDocumentRequest(BaseModel):
-    source_type: str = Field(..., description="One of: receipt, email, timesheet, pdf, voice, csv")
+    source_type: str = Field(
+        ..., description="One of: receipt, email, timesheet, pdf, voice, csv"
+    )
     raw_text: str = Field(..., min_length=1)
     metadata: Optional[Dict[str, Any]] = None
 
@@ -510,7 +521,9 @@ def health() -> dict[str, str]:
 
 @app.post("/documents/ingest")
 def ingest_document(payload: IngestDocumentRequest) -> dict[str, Any]:
-    document = service.ingest_document(payload.source_type, payload.raw_text, payload.metadata or {})
+    document = service.ingest_document(
+        payload.source_type, payload.raw_text, payload.metadata or {}
+    )
     return {
         "id": document.id,
         "source_type": document.source_type,
@@ -766,50 +779,52 @@ class Settings(BaseSettings):
     app_name: str = "Axiom"
     app_version: str = "0.1.0"
     debug: bool = False
-    
+
     database_url: str = "postgresql+psycopg://axiom:axiom@localhost:5432/axiom_db"
     redis_url: str = "redis://localhost:6379/0"
-    
+
     jwt_secret_key: str = "your-secret-key-change-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
-    
+
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/2"
-    
+
     s3_bucket_name: str = "axiom-documents"
     s3_region: str = "us-east-1"
     s3_access_key_id: str = ""
     s3_secret_access_key: str = ""
-    
+
     stripe_secret_key: str = ""
     stripe_publishable_key: str = ""
-    
+
     sentry_dsn: str = ""
-    
+
     default_currency: str = "USD"
     default_tax_rate: float = 0.0825
     default_payment_terms_days: int = 14
-    
+
     max_upload_size_mb: int = 50
     max_exception_queue_size: int = 500
-    
+
     smtp_host: str = "smtp.sendgrid.net"
     smtp_port: int = 587
     smtp_user: str = "apikey"
     smtp_password: str = ""
     smtp_from_email: str = "noreply@axiom.local"
-    
+
     log_level: str = "INFO"
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = False
 
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
 
 settings = get_settings()
 ```
@@ -979,7 +994,9 @@ class Base(DeclarativeBase):
 
 
 class TimestampMixin:
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
     updated_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -1083,7 +1100,7 @@ from .base import Base, IDMixin, TimestampMixin
 
 class Document(Base, IDMixin, TimestampMixin):
     __tablename__ = "documents"
-    
+
     owner_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     team_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     source_type = Column(String(50), nullable=False)
@@ -1096,9 +1113,11 @@ class Document(Base, IDMixin, TimestampMixin):
     metadata = Column(JSONB, default={}, nullable=False)
     processing_status = Column(String(50), default="pending")
     error_message = Column(Text, nullable=True)
-    
+
     owner = relationship("User", back_populates="documents")
-    invoices = relationship("Invoice", secondary="invoice_documents", back_populates="documents")
+    invoices = relationship(
+        "Invoice", secondary="invoice_documents", back_populates="documents"
+    )
 ```
 
 ```python name=backend/app/models/invoice.py
@@ -1125,39 +1144,43 @@ class Invoice(Base, IDMixin, TimestampMixin):
     __table_args__ = (
         UniqueConstraint("team_id", "invoice_number", name="uq_invoice_team_number"),
     )
-    
+
     team_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     client_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     created_by_id = Column(UUID(as_uuid=True), nullable=True)
     invoice_number = Column(String(50), nullable=False, index=True)
     issue_date = Column(Date, nullable=False)
     due_date = Column(Date, nullable=False)
-    
+
     status = Column(String(50), default="draft", nullable=False, index=True)
     currency = Column(String(3), default="USD")
-    
+
     subtotal = Column(DECIMAL(19, 2), default=Decimal("0"), nullable=False)
     tax_amount = Column(DECIMAL(19, 2), default=Decimal("0"), nullable=False)
     tax_rate = Column(DECIMAL(5, 4), default=Decimal("0.0825"))
     freight = Column(DECIMAL(19, 2), default=Decimal("0"))
     discount = Column(DECIMAL(19, 2), default=Decimal("0"))
     total = Column(DECIMAL(19, 2), default=Decimal("0"), nullable=False)
-    
+
     notes = Column(Text, nullable=True)
     evidence = Column(JSONB, default=[], nullable=False)
-    
+
     client = relationship("Client", back_populates="invoices")
     created_by_user = relationship("User", back_populates="invoices")
     team = relationship("Team", back_populates="invoices")
-    line_items = relationship("LineItem", back_populates="invoice", cascade="all, delete-orphan")
-    documents = relationship("Document", secondary="invoice_documents", back_populates="invoices")
+    line_items = relationship(
+        "LineItem", back_populates="invoice", cascade="all, delete-orphan"
+    )
+    documents = relationship(
+        "Document", secondary="invoice_documents", back_populates="invoices"
+    )
     expenses = relationship("Expense", back_populates="invoice")
     payments = relationship("Payment", back_populates="invoice")
 
 
 class LineItem(Base, IDMixin):
     __tablename__ = "line_items"
-    
+
     invoice_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     description = Column(String(500), nullable=False)
     quantity = Column(DECIMAL(19, 4), nullable=False)
@@ -1166,13 +1189,13 @@ class LineItem(Base, IDMixin):
     category = Column(String(50), default="service")
     freight = Column(DECIMAL(19, 2), default=Decimal("0"))
     notes = Column(String(500), nullable=True)
-    
+
     invoice = relationship("Invoice", back_populates="line_items")
 
 
 class InvoiceDocument(Base):
     __tablename__ = "invoice_documents"
-    
+
     invoice_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
     document_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
 ```
@@ -1231,7 +1254,7 @@ from .base import Base, IDMixin, TimestampMixin
 
 class Asset(Base, IDMixin, TimestampMixin):
     __tablename__ = "assets"
-    
+
     team_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     category = Column(String(100), nullable=False)
@@ -1242,21 +1265,23 @@ class Asset(Base, IDMixin, TimestampMixin):
     notes = Column(Text, nullable=True)
     evidence = Column(JSONB, default=[], nullable=False)
     metadata = Column(JSONB, default={}, nullable=False)
-    
+
     team = relationship("Team", back_populates="assets")
-    location_events = relationship("AssetLocationEvent", back_populates="asset", cascade="all, delete-orphan")
+    location_events = relationship(
+        "AssetLocationEvent", back_populates="asset", cascade="all, delete-orphan"
+    )
 
 
 class AssetLocationEvent(Base, IDMixin, TimestampMixin):
     __tablename__ = "asset_location_events"
-    
+
     asset_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     location = Column(String(500), nullable=False)
     source = Column(String(100), nullable=False)
     confidence = Column(Float, default=0.8)
     evidence = Column(Text, nullable=True)
     metadata = Column(JSONB, default={}, nullable=False)
-    
+
     asset = relationship("Asset", back_populates="location_events")
 ```
 
@@ -1592,14 +1617,16 @@ class ClientService:
         return value.strip().lower()
 
     @staticmethod
-    def create_client(
-        db: Session, team_id: UUID, payload: ClientCreate
-    ) -> ClientRead:
-        existing = db.query(Client).filter(
-            Client.team_id == team_id,
-            Client.name == ClientService.normalize_name(payload.name),
-        ).first()
-        
+    def create_client(db: Session, team_id: UUID, payload: ClientCreate) -> ClientRead:
+        existing = (
+            db.query(Client)
+            .filter(
+                Client.team_id == team_id,
+                Client.name == ClientService.normalize_name(payload.name),
+            )
+            .first()
+        )
+
         if existing:
             logger.warning(f"Client already exists: {existing.id}")
             return ClientRead.from_orm(existing)
@@ -1622,28 +1649,42 @@ class ClientService:
 
     @staticmethod
     def get_client(db: Session, team_id: UUID, client_id: UUID) -> Optional[ClientRead]:
-        client = db.query(Client).filter(
-            Client.id == client_id,
-            Client.team_id == team_id,
-        ).first()
+        client = (
+            db.query(Client)
+            .filter(
+                Client.id == client_id,
+                Client.team_id == team_id,
+            )
+            .first()
+        )
         return ClientRead.from_orm(client) if client else None
 
     @staticmethod
-    def list_clients(db: Session, team_id: UUID, skip: int = 0, limit: int = 100) -> list[ClientRead]:
-        clients = db.query(Client).filter(
-            Client.team_id == team_id
-        ).offset(skip).limit(limit).all()
+    def list_clients(
+        db: Session, team_id: UUID, skip: int = 0, limit: int = 100
+    ) -> list[ClientRead]:
+        clients = (
+            db.query(Client)
+            .filter(Client.team_id == team_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
         return [ClientRead.from_orm(c) for c in clients]
 
     @staticmethod
     def update_client(
         db: Session, team_id: UUID, client_id: UUID, payload: ClientUpdate
     ) -> Optional[ClientRead]:
-        client = db.query(Client).filter(
-            Client.id == client_id,
-            Client.team_id == team_id,
-        ).first()
-        
+        client = (
+            db.query(Client)
+            .filter(
+                Client.id == client_id,
+                Client.team_id == team_id,
+            )
+            .first()
+        )
+
         if not client:
             return None
 
@@ -1669,11 +1710,15 @@ class ClientService:
 
     @staticmethod
     def delete_client(db: Session, team_id: UUID, client_id: UUID) -> bool:
-        client = db.query(Client).filter(
-            Client.id == client_id,
-            Client.team_id == team_id,
-        ).first()
-        
+        client = (
+            db.query(Client)
+            .filter(
+                Client.id == client_id,
+                Client.team_id == team_id,
+            )
+            .first()
+        )
+
         if not client:
             return False
 
@@ -1756,6 +1801,7 @@ class DocumentService:
         try:
             image = Image.open(BytesIO(image_bytes))
             import pytesseract
+
             text = pytesseract.image_to_string(image)
             return text.strip()
         except Exception as exc:
@@ -1769,21 +1815,27 @@ class DocumentService:
         return cleaned
 
     @staticmethod
-    def extract_client_from_text(db: Session, team_id: UUID, raw_text: str) -> Optional[UUID]:
+    def extract_client_from_text(
+        db: Session, team_id: UUID, raw_text: str
+    ) -> Optional[UUID]:
         patterns = [
             r"(?i)(?:client|customer|bill to|billed to)[:\s]+([A-Za-z0-9 .&'-]+)",
             r"(?i)(?:from|from:)\s+([A-Za-z0-9 .&'-]+)",
         ]
-        
+
         for pattern in patterns:
             matches = re.findall(pattern, raw_text)
             if matches:
                 candidate = matches[0].strip()
                 if len(candidate) > 2:
-                    client = db.query(Client).filter(
-                        Client.team_id == team_id,
-                        Client.name.ilike(f"%{candidate}%"),
-                    ).first()
+                    client = (
+                        db.query(Client)
+                        .filter(
+                            Client.team_id == team_id,
+                            Client.name.ilike(f"%{candidate}%"),
+                        )
+                        .first()
+                    )
                     if client:
                         return client.id
 
@@ -1804,9 +1856,7 @@ class DocumentService:
         return amounts
 
     @staticmethod
-    def process_document(
-        db: Session, document_id: UUID
-    ) -> DocumentRead:
+    def process_document(db: Session, document_id: UUID) -> DocumentRead:
         document = db.query(Document).filter(Document.id == document_id).first()
         if not document:
             raise ValueError(f"Document {document_id} not found")
@@ -1815,7 +1865,9 @@ class DocumentService:
             document.processing_status = "processing"
             db.commit()
 
-            s3_obj = s3_client.get_object(Bucket=settings.s3_bucket_name, Key=document.s3_path)
+            s3_obj = s3_client.get_object(
+                Bucket=settings.s3_bucket_name, Key=document.s3_path
+            )
             file_content = s3_obj["Body"].read()
 
             if document.source_type in ["receipt", "invoice", "photo"]:
@@ -1873,10 +1925,14 @@ class InvoiceService:
     @staticmethod
     def generate_invoice_number(db: Session, team_id: UUID) -> str:
         today = date.today()
-        count = db.query(Invoice).filter(
-            Invoice.team_id == team_id,
-            Invoice.issue_date >= date(today.year, today.month, 1),
-        ).count()
+        count = (
+            db.query(Invoice)
+            .filter(
+                Invoice.team_id == team_id,
+                Invoice.issue_date >= date(today.year, today.month, 1),
+            )
+            .count()
+        )
         return f"AX-{today.strftime('%Y%m%d')}-{count + 1:04d}"
 
     @staticmethod
@@ -1884,7 +1940,7 @@ class InvoiceService:
         db: Session, team_id: UUID, created_by_id: UUID, payload: InvoiceCreate
     ) -> InvoiceRead:
         invoice_number = InvoiceService.generate_invoice_number(db, team_id)
-        
+
         invoice = Invoice(
             team_id=team_id,
             client_id=payload.client_id,
@@ -1921,16 +1977,26 @@ class InvoiceService:
         return InvoiceRead.from_orm(invoice)
 
     @staticmethod
-    def get_invoice(db: Session, team_id: UUID, invoice_id: UUID) -> Optional[InvoiceRead]:
-        invoice = db.query(Invoice).filter(
-            Invoice.id == invoice_id,
-            Invoice.team_id == team_id,
-        ).first()
+    def get_invoice(
+        db: Session, team_id: UUID, invoice_id: UUID
+    ) -> Optional[InvoiceRead]:
+        invoice = (
+            db.query(Invoice)
+            .filter(
+                Invoice.id == invoice_id,
+                Invoice.team_id == team_id,
+            )
+            .first()
+        )
         return InvoiceRead.from_orm(invoice) if invoice else None
 
     @staticmethod
     def list_invoices(
-        db: Session, team_id: UUID, status: Optional[str] = None, skip: int = 0, limit: int = 100
+        db: Session,
+        team_id: UUID,
+        status: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[InvoiceRead]:
         query = db.query(Invoice).filter(Invoice.team_id == team_id)
         if status:
@@ -1942,11 +2008,15 @@ class InvoiceService:
     def update_invoice(
         db: Session, team_id: UUID, invoice_id: UUID, payload: InvoiceUpdate
     ) -> Optional[InvoiceRead]:
-        invoice = db.query(Invoice).filter(
-            Invoice.id == invoice_id,
-            Invoice.team_id == team_id,
-        ).first()
-        
+        invoice = (
+            db.query(Invoice)
+            .filter(
+                Invoice.id == invoice_id,
+                Invoice.team_id == team_id,
+            )
+            .first()
+        )
+
         if not invoice:
             return None
 
@@ -1983,20 +2053,18 @@ class InvoiceService:
     @staticmethod
     def _recalculate_totals(db: Session, invoice: Invoice) -> None:
         line_items = db.query(LineItem).filter(LineItem.invoice_id == invoice.id).all()
-        
-        subtotal = sum(
-            (item.quantity * item.unit_cost) for item in line_items
-        )
+
+        subtotal = sum((item.quantity * item.unit_cost) for item in line_items)
         tax = sum(
             (item.quantity * item.unit_cost * item.tax_rate) for item in line_items
         )
         freight = sum((item.freight for item in line_items), Decimal("0"))
-        
+
         invoice.subtotal = subtotal
         invoice.tax_amount = tax
         invoice.freight = freight
         invoice.total = subtotal + tax + freight - (invoice.discount or Decimal("0"))
-        
+
         db.commit()
 ```
 
@@ -2061,11 +2129,15 @@ class AssetService:
         confidence: float = 0.8,
         evidence: str = "",
     ) -> Optional[Asset]:
-        asset = db.query(Asset).filter(
-            Asset.id == asset_id,
-            Asset.team_id == team_id,
-        ).first()
-        
+        asset = (
+            db.query(Asset)
+            .filter(
+                Asset.id == asset_id,
+                Asset.team_id == team_id,
+            )
+            .first()
+        )
+
         if not asset:
             return None
 
@@ -2088,10 +2160,14 @@ class AssetService:
 
     @staticmethod
     def get_asset(db: Session, team_id: UUID, asset_id: UUID) -> Optional[Asset]:
-        return db.query(Asset).filter(
-            Asset.id == asset_id,
-            Asset.team_id == team_id,
-        ).first()
+        return (
+            db.query(Asset)
+            .filter(
+                Asset.id == asset_id,
+                Asset.team_id == team_id,
+            )
+            .first()
+        )
 
     @staticmethod
     def list_assets(
@@ -2110,17 +2186,25 @@ class AssetService:
     def get_asset_history(
         db: Session, team_id: UUID, asset_id: UUID, limit: int = 50
     ) -> list[AssetLocationEvent]:
-        asset = db.query(Asset).filter(
-            Asset.id == asset_id,
-            Asset.team_id == team_id,
-        ).first()
-        
+        asset = (
+            db.query(Asset)
+            .filter(
+                Asset.id == asset_id,
+                Asset.team_id == team_id,
+            )
+            .first()
+        )
+
         if not asset:
             return []
 
-        return db.query(AssetLocationEvent).filter(
-            AssetLocationEvent.asset_id == asset_id
-        ).order_by(AssetLocationEvent.created_at.desc()).limit(limit).all()
+        return (
+            db.query(AssetLocationEvent)
+            .filter(AssetLocationEvent.asset_id == asset_id)
+            .order_by(AssetLocationEvent.created_at.desc())
+            .limit(limit)
+            .all()
+        )
 ```
 
 ```python name=backend/app/services/exception_service.py
@@ -2219,7 +2303,12 @@ class ExceptionService:
         )
         if severity:
             query = query.filter(ExceptionModel.severity == severity)
-        return query.order_by(ExceptionModel.created_at.desc()).offset(skip).limit(limit).all()
+        return (
+            query.order_by(ExceptionModel.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def resolve_exception(
@@ -2228,11 +2317,15 @@ class ExceptionService:
         exception_id: UUID,
         resolution_notes: str = "",
     ) -> Optional[ExceptionModel]:
-        exc = db.query(ExceptionModel).filter(
-            ExceptionModel.id == exception_id,
-            ExceptionModel.team_id == team_id,
-        ).first()
-        
+        exc = (
+            db.query(ExceptionModel)
+            .filter(
+                ExceptionModel.id == exception_id,
+                ExceptionModel.team_id == team_id,
+            )
+            .first()
+        )
+
         if not exc:
             return None
 
@@ -2275,7 +2368,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import create_access_token, hash_password, verify_password, verify_token
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+    verify_token,
+)
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 
@@ -2500,7 +2598,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.invoice import InvoiceCreate, InvoiceRead, InvoiceUpdate, InvoiceLineItemCreate
+from app.schemas.invoice import (
+    InvoiceCreate,
+    InvoiceRead,
+    InvoiceUpdate,
+    InvoiceLineItemCreate,
+)
 from app.services.invoice_service import InvoiceService
 
 router = APIRouter()
@@ -2600,7 +2703,9 @@ def register_asset(
     status: str = "in_service",
     db: Session = Depends(get_db),
 ):
-    asset = AssetService.register_asset(db, team_id, name, category, location, source, confidence, status)
+    asset = AssetService.register_asset(
+        db, team_id, name, category, location, source, confidence, status
+    )
     return {
         "id": str(asset.id),
         "name": asset.name,
@@ -2773,7 +2878,9 @@ def resolve_exception(
     resolution_notes: str = "",
     db: Session = Depends(get_db),
 ):
-    exc = ExceptionService.resolve_exception(db, team_id, exception_id, resolution_notes)
+    exc = ExceptionService.resolve_exception(
+        db, team_id, exception_id, resolution_notes
+    )
     if not exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -2840,6 +2947,7 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",

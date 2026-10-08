@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import logging
@@ -28,10 +28,10 @@ class JSONFormatter(logging.Formatter):
 def setup_logging() -> None:
     root_logger = logging.getLogger()
     root_logger.setLevel(settings.log_level)
-    
+
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JSONFormatter())
     root_logger.addHandler(handler)
-    
+
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("celery").setLevel(logging.INFO)

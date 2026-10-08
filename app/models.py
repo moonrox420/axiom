@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -67,8 +67,12 @@ class InvoiceDraft:
     created_at: datetime = field(default_factory=utc_now)
 
     def apply_totals(self) -> None:
-        self.subtotal = sum((item.quantity * item.unit_cost) for item in self.line_items)
-        self.tax = sum((item.quantity * item.unit_cost * item.tax_rate) for item in self.line_items)
+        self.subtotal = sum(
+            (item.quantity * item.unit_cost) for item in self.line_items
+        )
+        self.tax = sum(
+            (item.quantity * item.unit_cost * item.tax_rate) for item in self.line_items
+        )
         self.freight = sum((item.freight for item in self.line_items), Decimal(0))
         self.total = self.subtotal + self.tax + self.freight
 
@@ -80,7 +84,9 @@ class Asset:
     category: str
     current_location: str
     last_seen_at: datetime
-    status: Literal["in_service", "staged", "maintenance", "lost", "missing"] = "in_service"
+    status: Literal["in_service", "staged", "maintenance", "lost", "missing"] = (
+        "in_service"
+    )
     confidence: Decimal = Decimal("0.8")
     evidence: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=utc_now)

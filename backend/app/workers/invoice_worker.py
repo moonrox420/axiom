@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import UUID
 
 from app.core.database import SessionLocal
@@ -25,14 +26,23 @@ def generate_invoice_from_document_task(
             raise ValueError(f"Document {document_id} not found")
 
         line_items = []
-        if document.extracted_data and document.extracted_data.get("amounts"):
-            for amount_data in document.extracted_data["amounts"]:
+        extracted_data = (
+            document.extracted_data if isinstance(document.extracted_data, dict) else {}
+        )
+        amounts = extracted_data.get("amounts")
+        if isinstance(amounts, list):
+            for amount_data in amounts:
+                amt = (
+                    amount_data.get("amount", "0")
+                    if isinstance(amount_data, dict)
+                    else "0"
+                )
                 line_items.append(
                     InvoiceLineItemCreate(
                         description="Service",
-                        quantity=1,
-                        unit_cost=amount_data["amount"],
-                        tax_rate=0.0825,
+                        quantity=Decimal(1),
+                        unit_cost=Decimal(str(amt)),
+                        tax_rate=Decimal("0.0825"),
                         category="service",
                     )
                 )
@@ -41,9 +51,9 @@ def generate_invoice_from_document_task(
             line_items.append(
                 InvoiceLineItemCreate(
                     description="General service",
-                    quantity=1,
-                    unit_cost=0,
-                    tax_rate=0.0825,
+                    quantity=Decimal(1),
+                    unit_cost=Decimal(0),
+                    tax_rate=Decimal("0.0825"),
                 )
             )
 

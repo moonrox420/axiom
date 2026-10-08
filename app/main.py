@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
@@ -14,7 +14,9 @@ service = AxiomService(settings=AxiomSettings())
 
 
 class IngestDocumentRequest(BaseModel):
-    source_type: str = Field(..., description="One of: receipt, email, timesheet, pdf, voice, csv")
+    source_type: str = Field(
+        ..., description="One of: receipt, email, timesheet, pdf, voice, csv"
+    )
     raw_text: str = Field(..., min_length=1)
     metadata: dict[str, Any] | None = None
 
@@ -47,7 +49,9 @@ def health() -> dict[str, str]:
 
 @app.post("/documents/ingest")
 def ingest_document(payload: IngestDocumentRequest) -> dict[str, Any]:
-    document = service.ingest_document(payload.source_type, payload.raw_text, payload.metadata or {})
+    document = service.ingest_document(
+        payload.source_type, payload.raw_text, payload.metadata or {}
+    )
     return {
         "id": document.id,
         "source_type": document.source_type,

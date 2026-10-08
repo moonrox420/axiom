@@ -18,10 +18,14 @@ class InvoiceService:
     @staticmethod
     def generate_invoice_number(db: Session, team_id: UUID) -> str:
         today = datetime.now(timezone.utc).date()
-        count = db.query(Invoice).filter(
-            Invoice.team_id == team_id,
-            Invoice.issue_date >= date(today.year, today.month, 1),
-        ).count()
+        count = (
+            db.query(Invoice)
+            .filter(
+                Invoice.team_id == team_id,
+                Invoice.issue_date >= date(today.year, today.month, 1),
+            )
+            .count()
+        )
         return f"AX-{today.strftime('%Y%m%d')}-{count + 1:04d}"
 
     @staticmethod
@@ -29,7 +33,7 @@ class InvoiceService:
         db: Session, team_id: UUID, created_by_id: UUID, payload: InvoiceCreate
     ) -> InvoiceRead:
         invoice_number = InvoiceService.generate_invoice_number(db, team_id)
-        
+
         invoice = Invoice(
             team_id=team_id,
             client_id=payload.client_id,
@@ -67,15 +71,23 @@ class InvoiceService:
 
     @staticmethod
     def get_invoice(db: Session, team_id: UUID, invoice_id: UUID) -> InvoiceRead | None:
-        invoice = db.query(Invoice).filter(
-            Invoice.id == invoice_id,
-            Invoice.team_id == team_id,
-        ).first()
+        invoice = (
+            db.query(Invoice)
+            .filter(
+                Invoice.id == invoice_id,
+                Invoice.team_id == team_id,
+            )
+            .first()
+        )
         return InvoiceRead.from_orm(invoice) if invoice else None
 
     @staticmethod
     def list_invoices(
-        db: Session, team_id: UUID, status: str | None = None, skip: int = 0, limit: int = 100
+        db: Session,
+        team_id: UUID,
+        status: str | None = None,
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[InvoiceRead]:
         query = db.query(Invoice).filter(Invoice.team_id == team_id)
         if status:
@@ -87,11 +99,15 @@ class InvoiceService:
     def update_invoice(
         db: Session, team_id: UUID, invoice_id: UUID, payload: InvoiceUpdate
     ) -> InvoiceRead | None:
-        invoice = db.query(Invoice).filter(
-            Invoice.id == invoice_id,
-            Invoice.team_id == team_id,
-        ).first()
-        
+        invoice = (
+            db.query(Invoice)
+            .filter(
+                Invoice.id == invoice_id,
+                Invoice.team_id == team_id,
+            )
+            .first()
+        )
+
         if not invoice:
             return None
 
@@ -128,18 +144,16 @@ class InvoiceService:
     @staticmethod
     def _recalculate_totals(db: Session, invoice: Invoice) -> None:
         line_items = db.query(LineItem).filter(LineItem.invoice_id == invoice.id).all()
-        
-        subtotal = sum(
-            (item.quantity * item.unit_cost) for item in line_items
-        )
+
+        subtotal = sum((item.quantity * item.unit_cost) for item in line_items)
         tax = sum(
             (item.quantity * item.unit_cost * item.tax_rate) for item in line_items
         )
         freight = sum((item.freight for item in line_items), Decimal(0))
-        
+
         invoice.subtotal = subtotal
         invoice.tax_amount = tax
         invoice.freight = freight
         invoice.total = subtotal + tax + freight - (invoice.discount or Decimal(0))
-        
+
         db.commit()

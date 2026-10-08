@@ -1,3 +1,3 @@
-﻿from .services import AxiomService
+from .services import AxiomService
 
 __all__ = ["AxiomService"]

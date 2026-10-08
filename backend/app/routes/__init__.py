@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter
+from fastapi import APIRouter
 
 from .assets import router as assets_router
 from .auth import router as auth_router

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from sqlalchemy import Column, Float, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -9,7 +9,7 @@ from .base import Base, IDMixin, TimestampMixin
 
 class Document(Base, IDMixin, TimestampMixin):
     __tablename__ = "documents"
-    
+
     owner_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     team_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     source_type = Column(String(50), nullable=False)
@@ -22,6 +22,8 @@ class Document(Base, IDMixin, TimestampMixin):
     metadata = Column(JSONB, default={}, nullable=False)
     processing_status = Column(String(50), default="pending")
     error_message = Column(Text, nullable=True)
-    
+
     owner = relationship("User", back_populates="documents")
-    invoices = relationship("Invoice", secondary="invoice_documents", back_populates="documents")
+    invoices = relationship(
+        "Invoice", secondary="invoice_documents", back_populates="documents"
+    )

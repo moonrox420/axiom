@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 import re
@@ -27,14 +27,16 @@ class ClientService:
         return value.strip().lower()
 
     @staticmethod
-    def create_client(
-        db: Session, team_id: UUID, payload: ClientCreate
-    ) -> ClientRead:
-        existing = db.query(Client).filter(
-            Client.team_id == team_id,
-            Client.name == ClientService.normalize_name(payload.name),
-        ).first()
-        
+    def create_client(db: Session, team_id: UUID, payload: ClientCreate) -> ClientRead:
+        existing = (
+            db.query(Client)
+            .filter(
+                Client.team_id == team_id,
+                Client.name == ClientService.normalize_name(payload.name),
+            )
+            .first()
+        )
+
         if existing:
             logger.warning(f"Client already exists: {existing.id}")
             return ClientRead.from_orm(existing)
@@ -57,28 +59,42 @@ class ClientService:
 
     @staticmethod
     def get_client(db: Session, team_id: UUID, client_id: UUID) -> ClientRead | None:
-        client = db.query(Client).filter(
-            Client.id == client_id,
-            Client.team_id == team_id,
-        ).first()
+        client = (
+            db.query(Client)
+            .filter(
+                Client.id == client_id,
+                Client.team_id == team_id,
+            )
+            .first()
+        )
         return ClientRead.from_orm(client) if client else None
 
     @staticmethod
-    def list_clients(db: Session, team_id: UUID, skip: int = 0, limit: int = 100) -> list[ClientRead]:
-        clients = db.query(Client).filter(
-            Client.team_id == team_id
-        ).offset(skip).limit(limit).all()
+    def list_clients(
+        db: Session, team_id: UUID, skip: int = 0, limit: int = 100
+    ) -> list[ClientRead]:
+        clients = (
+            db.query(Client)
+            .filter(Client.team_id == team_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
         return [ClientRead.from_orm(c) for c in clients]
 
     @staticmethod
     def update_client(
         db: Session, team_id: UUID, client_id: UUID, payload: ClientUpdate
     ) -> ClientRead | None:
-        client = db.query(Client).filter(
-            Client.id == client_id,
-            Client.team_id == team_id,
-        ).first()
-        
+        client = (
+            db.query(Client)
+            .filter(
+                Client.id == client_id,
+                Client.team_id == team_id,
+            )
+            .first()
+        )
+
         if not client:
             return None
 
@@ -104,11 +120,15 @@ class ClientService:
 
     @staticmethod
     def delete_client(db: Session, team_id: UUID, client_id: UUID) -> bool:
-        client = db.query(Client).filter(
-            Client.id == client_id,
-            Client.team_id == team_id,
-        ).first()
-        
+        client = (
+            db.query(Client)
+            .filter(
+                Client.id == client_id,
+                Client.team_id == team_id,
+            )
+            .first()
+        )
+
         if not client:
             return False
 

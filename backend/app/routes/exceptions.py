@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from uuid import UUID
 
@@ -66,7 +66,9 @@ def resolve_exception(
     resolution_notes: str = "",
     db: Session = Depends(get_db),
 ):
-    exc = ExceptionService.resolve_exception(db, team_id, exception_id, resolution_notes)
+    exc = ExceptionService.resolve_exception(
+        db, team_id, exception_id, resolution_notes
+    )
     if not exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

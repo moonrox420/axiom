@@ -35,7 +35,7 @@ def create_access_token(
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.access_token_expire_minutes
         )
-    
+
     to_encode: dict[str, Any] = {
         "user_id": user_id,
         "email": email,
@@ -53,12 +53,16 @@ def verify_token(token: str) -> TokenData:
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
         user_id: str = payload.get("user_id")
-        email: str = payload.get("email")
-        exp: int = payload.get("exp")
-        
+        email: str = str(payload.get("email") or "")
+        exp: int = int(payload.get("exp") or 0)
+
         if user_id is None or email is None:
             raise JWTError("Invalid token")
-        
-        return TokenData(user_id=user_id, email=email, exp=datetime.fromtimestamp(exp, tz=timezone.utc))
+
+        return TokenData(
+            user_id=user_id,
+            email=email,
+            exp=datetime.fromtimestamp(exp, tz=timezone.utc),
+        )
     except JWTError as exc:
         raise JWTError("Could not validate credentials") from exc

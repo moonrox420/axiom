@@ -3,3 +3,14 @@ ignore = ["B008", "BLE001"]
 
 [tool.isort]
 profile = "black"
+
+[tool.pycleaner]
+exclude = ["migrations/", "generated/"]
+line-length = 88
+[tool.mypy]
+mypy_path = "backend"
+ignore_missing_imports = true
+explicit_package_bases = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+disable_error_code = ["var-annotated", "assignment", "arg-type", "return-value"]
+exclude = ["frontend", ".venv"]

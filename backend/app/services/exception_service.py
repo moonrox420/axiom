@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 from decimal import Decimal
@@ -92,7 +92,12 @@ class ExceptionService:
         )
         if severity:
             query = query.filter(ExceptionModel.severity == severity)
-        return query.order_by(ExceptionModel.created_at.desc()).offset(skip).limit(limit).all()
+        return (
+            query.order_by(ExceptionModel.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def resolve_exception(
@@ -101,11 +106,15 @@ class ExceptionService:
         exception_id: UUID,
         resolution_notes: str = "",
     ) -> ExceptionModel | None:
-        exc = db.query(ExceptionModel).filter(
-            ExceptionModel.id == exception_id,
-            ExceptionModel.team_id == team_id,
-        ).first()
-        
+        exc = (
+            db.query(ExceptionModel)
+            .filter(
+                ExceptionModel.id == exception_id,
+                ExceptionModel.team_id == team_id,
+            )
+            .first()
+        )
+
         if not exc:
             return None
 

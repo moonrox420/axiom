@@ -1,4 +1,4 @@
-﻿from .asset_service import AssetService
+from .asset_service import AssetService
 from .client_service import ClientService
 from .document_service import DocumentService
 from .exception_service import ExceptionService

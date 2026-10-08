@@ -2,14 +2,7 @@
 
 from decimal import Decimal
 
-from sqlalchemy import (
-    DECIMAL,
-    Column,
-    Date,
-    String,
-    Text,
-    UniqueConstraint,
-)
+from sqlalchemy import DECIMAL, Column, Date, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 

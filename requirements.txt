@@ -22,7 +22,7 @@ cryptography==50.0.2
 Deprecated==3.0.0
 dnspython==2.8.0
 ecdsa==0.19.2
-email_validator==2.2.0
+email_validator==2.2.0n
 fastapi==0.115.0
 flake8==7.4.1
 greenlet==3.5.6

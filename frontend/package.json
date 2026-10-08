@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "axiom-frontend",
   "version": "0.1.0",
   "type": "module",
@@ -10,25 +10,31 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "axios": "^1.7.9",
+    "clsx": "^2.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.20.0",
-    "zustand": "^4.4.1",
-    "axios": "^1.6.0",
-    "clsx": "^2.0.0",
-    "tailwindcss": "^3.4.1"
+    "react-router-dom": "^7.18.4",
+    "tailwindcss": "^3.4.17",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
-    "@types/node": "^20.10.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.8",
-    "eslint": "^8.55.0",
-    "@typescript-eslint/eslint-plugin": "^6.13.2",
-    "@typescript-eslint/parser": "^6.13.2",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31"
+    "@types/node": "^20.17.19",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "postcss": "^8.5.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0"
+  },
+  "overrides": {
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8",
+    "minimatch": "^9.0.7",
+    "postcss-selector-parser": "^7.1.6"
   }
 }
